@@ -4,4 +4,11 @@ http://arduino.cc/playground/Code/PIDLibraryAdaptiveTuningsExample
 http://arduino.cc/playground/Code/PIDLibrary
 http://arduino.cc/playground/ComponentLib/Thermistor2
 
+Setup:
 
+Download the library from here: https://github.com/br3ttb/Arduino-PID-Library/zipball/master
+and move the PID_v1 to your arduino's /libraries directory
+
+Select your board type from the arduino IDE
+
+Burn it to your 'duino
