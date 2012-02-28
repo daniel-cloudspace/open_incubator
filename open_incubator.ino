@@ -1,14 +1,18 @@
 #include <PID_v1.h>
+#define RelayPin 13
+
 
 //Define Variables we'll be connecting to
 double Setpoint, Input, Output;
 
-//Define the aggressive and conservative Tuning Parameters
-double aggKp=4, aggKi=0.2, aggKd=1;
-double consKp=1, consKi=0.05, consKd=0.25;
-
 //Specify the links and initial tuning parameters
-PID myPID(&Input, &Output, &Setpoint, consKp, consKi, consKd, DIRECT);
+PID myPID(&Input, &Output, &Setpoint,2,5,1, DIRECT);
+
+
+int WindowSize = 5000;
+unsigned long windowStartTime;
+
+
 
 double thermistor_read(int RawADC) {
  double Temp;
@@ -21,30 +25,35 @@ double thermistor_read(int RawADC) {
 
 void setup()
 {
-  //initialize the variables we're linked to
-  Input = thermistor_read(analogRead(0));
-  Setpoint = 100;
+  Setpoint = 130;
+
+  myPID.SetOutputLimits(0, WindowSize);
 
   //turn the PID on
-  myPID.SetMode(AUTOMATIC);
+  myPID.SetMode(AUTOMATIC); 
+ 
+  Serial.begin(9600);
 }
 
 void loop()
 {
-  Input = analogRead(0);
-
-  double gap = abs(Setpoint-Input); //distance away from setpoint
-  if(gap<10)
-  {  //we're close to setpoint, use conservative tuning parameters
-    myPID.SetTunings(consKp, consKi, consKd);
-  }
-  else
-  {
-     //we're far from setpoint, use aggressive tuning parameters
-     myPID.SetTunings(aggKp, aggKi, aggKd);
-  }
-
+  Input = thermistor_read(analogRead(0));
   myPID.Compute();
+
+  /************************************************
+   * turn the output pin on/off based on pid output
+   ************************************************/
+  unsigned long now = millis();
+  if(now - windowStartTime > WindowSize) { // time to shift the Relay Window
+    windowStartTime += WindowSize;
+  }
+  
+  if(Output > now - windowStartTime) 
+    digitalWrite(RelayPin,HIGH);
+  else
+    digitalWrite(RelayPin,LOW);
+  
+  Serial.println(Input);
   analogWrite(3,Output);
 }
 
